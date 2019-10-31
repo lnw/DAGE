@@ -79,7 +79,8 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/dage_fortran.so
 add_custom_target(dage ALL DEPENDS ${PROJECT_BINARY_DIR}/dage_fortran.so)
 add_dependencies(dage bubbles)
 
-set(VERSION_STRING ".cpython-37m-x86_64-linux-gnu") # yes, this is not in any way portable
+set(VERSION_STRING ".cpython-36m-x86_64-linux-gnu") # yes, this is not in any way portable
+# set(VERSION_STRING ".cpython-37m-x86_64-linux-gnu") # yes, this is not in any way portable
 
 # target_link_libraries(dage bubbles getkw ${LIBS})
 install(FILES ${PROJECT_BINARY_DIR}/utils/dage_fortran${VERSION_STRING}.so DESTINATION

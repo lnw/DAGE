@@ -117,8 +117,7 @@ extern "C" void cube_alloc_(int *deviceID, int *width ,int *height ,int *depth,
     int device = (*deviceID-1)%number_of_devices;
     cudaSetDevice(device);
     
-    cudaExtent extent = make_cudaExtent(*width * sizeof(RP), *height,
-            *depth);
+    cudaExtent extent = make_cudaExtent(*width * sizeof(RP), *height, *depth);
     cudaPitchedPtr devPitchedPtr;
     
     //size_t mem_tot_0 = 0;
@@ -127,6 +126,7 @@ extern "C" void cube_alloc_(int *deviceID, int *width ,int *height ,int *depth,
     //size_t mem_free_1 = 0;
     
     //cudaMemGetInfo  (&mem_free_1, &mem_tot_1);
+printf("extent,cube_alloc_ (h/w/d): %d, %d, %d\n", *width * sizeof(RP), *height, *depth);
     cudastatus=cudaMalloc3D(&devPitchedPtr, extent);
     check_cublas_errors(__FILE__, __LINE__);
 //    Dangerous casting here!

@@ -3624,7 +3624,6 @@ contains
         result_bubbles%k = bubbles1%get_k() + bubbles2%get_k()
 
 #ifdef HAVE_CUDA
-           
   
         !bubbles2_copy = bubbles2
         !taylor_series_bubbles2_copy = taylor_series_bubbles2

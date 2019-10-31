@@ -363,6 +363,7 @@ void ModifiedSphericalCubeBessels::initModifiedSphericalCubeBessels(int lmin, in
         
         // allocate memory for entire shape for the main pointers
         cudaExtent extent = make_cudaExtent(shape[X_] * sizeof(double), shape[Y_], device_slice_count * (lmax+1) );
+printf("extent, initModifiedSphericalCubeBessels (h/w/d): %d, %d, %d\n", shape[X_] * sizeof(double), shape[Y_], device_slice_count * (lmax+1));
         cudaMalloc3D (&pointer, extent);
         
         check_bessels_errors(__FILE__, __LINE__);

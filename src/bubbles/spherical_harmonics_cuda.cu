@@ -858,6 +858,7 @@ void RealCubeHarmonics::initCubeHarmonics(int lmin, int lmax, int normalization,
         
         // allocate memory for entire shape for the main pointers
         cudaExtent extent = make_cudaExtent(shape[X_] * sizeof(double), shape[Y_], device_slice_count * ilmmax );
+printf("extent, initCubeHarmonics (h/w/d): %d, %d, %d\n", shape[X_] * sizeof(double), shape[Y_], device_slice_count * ilmmax);
         cudaMalloc3D (&pointer, extent);
         
         check_cuda_errors(__FILE__, __LINE__);

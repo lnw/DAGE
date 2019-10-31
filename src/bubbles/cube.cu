@@ -264,28 +264,44 @@ void CudaCube::initMemorySliced(StreamContainer *streamContainer, int shape[3], 
         
         cudaPitchedPtr pointer;
 
-        cudaExtent extent = make_cudaExtent(shape[0] * sizeof(double), shape[1], device_slice_count);
-        
         // if all memory is initialized at all devices, we allocate two cubes: one for all 
         // handling and one to allow summation upon download
         if (all_memory_at_all_devices) {
             // allocate memory for entire shape for the main pointers
             cudaExtent device_memory_extent = make_cudaExtent(shape[0] * sizeof(double), shape[1], shape[2]);
+size_t mf, ma;
+cudaMemGetInfo(&mf, &ma);
+printf("free: %lu, total: %lu\n", mf, ma);
+printf("extent, initMemorySliced, main (h/w/d): %d, %d, %d\n", shape[0], shape[1], shape[2]);
             cudaMalloc3D (&pointer, device_memory_extent);
+cudaMemGetInfo(&mf, &ma);
+printf("free: %lu, total: %lu\n", mf, ma);
             check_errors(__FILE__, __LINE__);
             this->device_pitches[device] = pointer.pitch;
             this->device_cubes[device] = (double *) pointer.ptr;
             
             // and sliced memory for the gathering
             cudaPitchedPtr pointer2;
+cudaMemGetInfo(&mf, &ma);
+printf("free: %lu, total: %lu\n", mf, ma);
+printf("extent, initMemorySliced, gathering (h/w/d): %d, %d, %d\n", shape[0], shape[1], shape[2]);
             cudaMalloc3D(&pointer2, device_memory_extent);
+cudaMemGetInfo(&mf, &ma);
+printf("free: %lu, total: %lu\n", mf, ma);
             this->device_gather_pitches[device] = pointer2.pitch;
             this->device_gather_cubes[device] = (double *) pointer2.ptr;
             check_errors(__FILE__, __LINE__);
             
         }
         else {
+            cudaExtent extent = make_cudaExtent(shape[0] * sizeof(double), shape[1], device_slice_count);
+size_t mf, ma;
+cudaMemGetInfo(&mf, &ma);
+printf("free: %lu, total: %lu\n", mf, ma);
+printf("extent, initMemorySliced (h/w/d): %d, %d, %d\n", shape[0] , shape[1], device_slice_count);
             cudaMalloc3D (&pointer, extent);
+cudaMemGetInfo(&mf, &ma);
+printf("free: %lu, total: %lu\n", mf, ma);
             check_errors(__FILE__, __LINE__);
             this->device_pitches[device] = pointer.pitch;
             this->device_cubes[device] = (double *) pointer.ptr;
@@ -314,8 +330,13 @@ void CudaCube::initMemory(StreamContainer *streamContainer, int shape[3], bool a
 
         int device_vector_count =  (this->shape[2] * this->shape[1]) / streamContainer->getNumberOfDevices()
                                   + (((this->shape[2] * this->shape[1]) % streamContainer->getNumberOfDevices()) > device);
+size_t mf, ma;
+cudaMemGetInfo(&mf, &ma);
+printf("free: %lu, total: %lu\n", mf, ma);
         cudaMallocPitch((void**)&device_cubes[device], &device_pitches[device], 
                     shape[0] * sizeof(double), device_vector_count); 
+cudaMemGetInfo(&mf, &ma);
+printf("free: %lu, total: %lu (initMemory)\n", mf, ma);
     }
 }
 
@@ -399,6 +420,8 @@ void CudaCube::setAllMemoryToZero() {
         }
     }
 }
+
+
 
 void CudaCube::initHost(double *host_cube, int host_cube_shape[3], bool register_host) {
     // check if the cube is registered, if is, unregister before 
