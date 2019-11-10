@@ -407,6 +407,12 @@ contains
         integer                       :: x, y, z
         real(REAL64)                  :: coord_x, coord_y, coord_z, r2d, r
         real(REAL64), allocatable     :: grid1(:), grid2(:), grid3(:)
+        !helix
+        integer                       :: n_coils, n_points, p
+        real(REAL64), allocatable     :: backbone(:,:)
+        real(REAL64)                  :: major_rad, minor_rad, phi, theta
+        integer                       :: shifted_index
+        real(REAL64)                  :: coord_phi, dist_sq, lowest_dist_sq
 
         dim1 = self%nuclear_potential%grid%axis(1)%get_shape()
         dim2 = self%nuclear_potential%grid%axis(2)%get_shape()
@@ -416,23 +422,63 @@ contains
         allocate(grid3(dim3), source=self%nuclear_potential%grid%axis(3)%get_coordinates())
         allocate(potential_cube(dim1, dim2, dim3))
 
-        do x = 1, dim1
-            coord_x = grid1(x)
-            do y = 1, dim2
-                coord_y = grid2(y)
-                do z = 1, dim3
-                    coord_z = grid3(z)
-                    r2d = dsqrt(coord_x**2 + coord_y**2)
-                    r = dsqrt((r2d - rad)**2 + coord_z**2)
-                    if (pot_index == 1) then
-                        potential_cube(x, y, z) = r**2 ! provide your own function here
-                    else
-                        write(*,*)'invalid index'
-                        call abort()
-                    endif
+        select case (pot_index)
+            case (1) ! a torus
+                do x = 1, dim1
+                    coord_x = grid1(x)
+                    do y = 1, dim2
+                        coord_y = grid2(y)
+                        do z = 1, dim3
+                            coord_z = grid3(z)
+                            r2d = dsqrt(coord_x**2 + coord_y**2)
+                            r = dsqrt((r2d - rad)**2 + coord_z**2)
+                            potential_cube(x, y, z) = r**2 ! provide your own function here
+                        enddo
+                    enddo
                 enddo
-            enddo
-        enddo
+            case (2) ! a helix
+                ! get helix
+                n_coils = 7
+                n_points = 10000
+                major_rad = rad
+                minor_rad = 1.0
+                allocate(backbone(3, n_points)) ! a number of 3D points on the backbone
+                do p=1, n_points
+                    theta = n_coils*(2*PI/n_points)*p
+                    phi = (2*PI/n_points)*p
+                    backbone(1,p) = (major_rad + minor_rad*cos(theta)) * cos(phi)
+                    backbone(2,p) = (major_rad + minor_rad*cos(theta)) * sin(phi)
+                    backbone(3,p) = minor_rad*sin(theta)
+                enddo
+                ! get potential
+                do x = 1, dim1
+                    coord_x = grid1(x)
+                    do y = 1, dim2
+                        coord_y = grid2(y)
+                        do z = 1, dim3
+                            coord_z = grid3(z)
+                            coord_phi = atan2(coord_y, coord_x)
+                            
+                            lowest_dist_sq = 1.d10
+                            do p = int((coord_phi/(2*PI) - n_coils/2.0)*n_points), int((coord_phi/(2*PI) + n_coils/2.0)*n_points)
+                                shifted_index = mod(p + n_points, n_points)
+                                dist_sq =   (backbone(1,shifted_index) - coord_x)**2 &
+                                          + (backbone(2,shifted_index) - coord_y)**2 &
+                                          + (backbone(3,shifted_index) - coord_z)**2
+                                if(dist_sq < lowest_dist_sq) lowest_dist_sq = dist_sq
+                            enddo
+                            r = dsqrt(lowest_dist_sq)
+                            potential_cube(x, y, z) = r**2
+                        enddo
+                    enddo
+                enddo
+
+            case default
+                write(*,*)'invalid index'
+                call abort()
+        end select
+
+
         deallocate(grid1, grid2, grid3)
     end function
 
