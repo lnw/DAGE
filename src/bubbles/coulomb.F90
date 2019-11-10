@@ -478,7 +478,6 @@ contains
                 call abort()
         end select
 
-
         deallocate(grid1, grid2, grid3)
     end function
 
